@@ -62,9 +62,21 @@ class test_segment_utilities(unittest.TestCase):
                           [11, 12],
                           [9, 15]])
         scores = np.arange(boxes.shape[0])[::-1]
-        idx_sol = [4, 1, 2]
-        bout, sout = segment.non_maxima_supression(boxes, None)
+        # No score, NMS by iou
+        idx_sol = [4, 3, 1, 2]
+        bout, sout = segment.non_maxima_supression(boxes, None, 0.5)
         np.testing.assert_array_equal(bout, boxes[idx_sol, ...])
+        # No score, NMS by overlap
+        idx_sol = [4, 1, 2]
+        bout, sout = segment.non_maxima_supression(boxes, None,
+                                                   measure='overlap')
+        np.testing.assert_array_equal(bout, boxes[idx_sol, ...])
+        # With score, NMS by iou
+        idx_sol = [0, 1, 2, 3]
+        bout, sout = segment.non_maxima_supression(boxes, scores, 0.5)
+        np.testing.assert_array_equal(bout, boxes[idx_sol, ...])
+        # With score, NMS by overlap
         idx_sol = [0, 1, 2, 4]
-        bout, sout = segment.non_maxima_supression(boxes, scores)
+        bout, sout = segment.non_maxima_supression(boxes, scores,
+                                                   measure='overlap')
         np.testing.assert_array_equal(bout, boxes[idx_sol, ...])

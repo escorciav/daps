@@ -136,7 +136,7 @@ def iou(target_segments, test_segments):
     return iou
 
 
-def non_maxima_supression(dets, score=None, overlap=0.7):
+def non_maxima_supression(dets, score=None, overlap=0.7, measure='iou'):
     """Non-maximum suppression
 
     Greedily select high-scoring detections and skip detections that are
@@ -151,8 +151,11 @@ def non_maxima_supression(dets, score=None, overlap=0.7):
         2d-ndarray of size [num-segments, 2]. Each row is ['f-init', 'f-end'].
     score : ndarray.
         1d-ndarray of with detection scores. Size [num-segments, 2].
-    overlap : float, optional
+    overlap : float, optional.
         Minimum overlap ratio.
+    measure : str, optional.
+        Overlap measure used to perform NMS either IoU ('iou') or ratio of
+        intersection ('overlap')
 
     Outputs
     -------
@@ -164,8 +167,11 @@ def non_maxima_supression(dets, score=None, overlap=0.7):
     Raises
     ------
     ValueError
-        Mismatch between score 1d-array and dets 2d-array
+        - Mismatch between score 1d-array and dets 2d-array
+        - Unknown measure for defining overlap
+
     """
+    measure = measure.lower()
     if score is None:
         score = dets[:, 1]
     if score.shape[0] != dets.shape[0]:
@@ -189,7 +195,12 @@ def non_maxima_supression(dets, score=None, overlap=0.7):
         tt2 = np.minimum(t2[i], t2[idx[:last]])
 
         wh = np.maximum(0, tt2 - tt1 + 1)
-        o = wh / area[idx[:last]]
+        if measure == 'overlap':
+            o = wh / area[idx[:last]]
+        elif measure == 'iou':
+            o = wh / (area[i] + area[idx[:last]] - wh)
+        else:
+            raise ValueError('Unknown overlap measure for NMS')
 
         idx = np.delete(idx,
                         np.concatenate(([last], np.where(o > overlap)[0])))
