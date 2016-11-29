@@ -2,7 +2,7 @@ import lasagne
 import numpy as np
 import theano
 from lasagne.layers import DenseLayer, InputLayer, LSTMLayer, SliceLayer
-from lasagne.layers import get_output
+from lasagne.layers import get_all_layers, get_output, set_all_param_values
 from lasagne.utils import floatX
 
 from daps.utils.segment import format as segment_format
@@ -40,29 +40,36 @@ class DAPs(object):
         self.receptive_field = receptive_field
         self._build()
 
-    def _build(self):
+    def _build(self, forget_bias=5.0, grad_clip=10.0):
         """Build architecture
         """
-        self.network = []
-        self.network.append(InputLayer(shape=(None, self.seq_length,
-                                              self.input_size),
-                                       name='input'))
-        self.input_var = (self.network[0]).input_var
+        network = InputLayer(shape=(None, self.seq_length, self.input_size),
+                             name='input')
+        self.input_var = network.input_var
 
         # Hidden layers
         tanh = lasagne.nonlinearities.tanh
+        gate, constant = lasagne.layers.Gate, lasagne.init.Constant
         for _ in range(self.depth):
-            self.network.append(
-                LSTMLayer(self.network[-1], self.width, nonlinearity=tanh))
+            network = LSTMLayer(network, self.width, nonlinearity=tanh,
+                                grad_clipping=grad_clip,
+                                forgetgate=gate(b=constant(forget_bias)))
 
         # Retain last-output state
-        self.network.append(SliceLayer(self.network[-1], -1, 1))
+        network = SliceLayer(network, -1, 1)
 
         # Output layer
         sigmoid = lasagne.nonlinearities.sigmoid
-        self.loc_var = DenseLayer(self.network[-1], self.num_outputs * 2)
-        self.conf_var = DenseLayer(self.network[-1], self.num_outputs,
-                                   nonlinearity=sigmoid)
+        loc_layer = DenseLayer(network, self.num_outputs * 2)
+        conf_layer = DenseLayer(network, self.num_outputs,
+                                nonlinearity=sigmoid)
+
+        # Grab all layers into DAPs instance
+        self.network = get_all_layers([loc_layer, conf_layer])
+
+        # Get theano expression for outputs of DAPs model
+        self.loc_var, self.conf_var = get_output([loc_layer, conf_layer],
+                                                 deterministic=True)
 
     def compile(self, **kwargs):
         """Compile theano function
@@ -76,13 +83,13 @@ class DAPs(object):
         if callable(self.model):
             print 'Model is already compile'
             return None
-        loc_expr, conf_expr = get_output((self.loc_var, self.conf_var),
-                                         deterministic=True)
         self.model = theano.function([self.input_var],
-                                     [loc_expr, conf_expr])
+                                     [self.loc_var, self.conf_var])
 
     def forward_pass(self, input_data):
-        """Generate proposals for bunch of clips
+        """Foward-pass over sequence encoder
+
+        Generate segment proposals and their confidence for bunch of clips
 
         Parameters
         ----------
@@ -128,8 +135,7 @@ class DAPs(object):
         """
         with np.load(filename) as f:
             param_values = [f['arr_%d' % i] for i in range(len(f.files))]
-            lasagne.layers.set_all_param_values([self.loc_var, self.conf_var],
-                                                param_values)
+        set_all_param_values(self.network, param_values)
 
     def retrieve_proposals(self, c3d_stack, f_init_array):
         """Retrieve proposals for multiple streams.
@@ -177,6 +183,6 @@ class DAPs(object):
 
         # Transform center 2 boundaries
         proposals = np.reshape(
-            segment_format(loc.reshape((-1, 2)), 'c2b').astype(int),
-            (n_streams, -1, 2))
+            segment_format(loc.reshape((-1, 2)), 'c2b'),
+            (n_streams, -1, 2)).astype(int)
         return proposals, score

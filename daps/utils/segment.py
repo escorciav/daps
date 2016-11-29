@@ -1,7 +1,7 @@
 import numpy as np
 
 
-def format(X, mthd='c2b', T=None, init=None):
+def format(X, mthd='c2b'):
     """Transform between temporal/frame annotations
 
     Parameters
