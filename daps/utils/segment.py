@@ -178,31 +178,32 @@ def non_maxima_supression(dets, score=None, overlap=0.7, measure='iou'):
         raise ValueError('Mismatch between dets and score.')
     if dets.dtype.kind == "i":
             dets = dets.astype("float")
+    # Discard incorrect segments (avoid infinite loop due to NaN)
+    idx_correct = np.where(dets[:, 1] > dets[:, 0])[0]
 
     # Grab coordinates
-    t1 = dets[:, 0]
-    t2 = dets[:, 1]
+    t1 = dets[idx_correct, 0]
+    t2 = dets[idx_correct, 1]
 
     area = t2 - t1 + 1
-    idx = np.argsort(score)
+    idx = np.argsort(score[idx_correct])
     pick = []
     while len(idx) > 0:
         last = len(idx) - 1
         i = idx[last]
         pick.append(i)
 
-        tt1 = np.maximum(t1[i], t1[idx[:last]])
-        tt2 = np.minimum(t2[i], t2[idx[:last]])
+        tt1 = np.maximum(t1[i], t1[idx])
+        tt2 = np.minimum(t2[i], t2[idx])
 
         wh = np.maximum(0, tt2 - tt1 + 1)
         if measure == 'overlap':
-            o = wh / area[idx[:last]]
+            o = wh / area[idx]
         elif measure == 'iou':
-            o = wh / (area[i] + area[idx[:last]] - wh)
+            o = wh / (area[i] + area[idx] - wh)
         else:
             raise ValueError('Unknown overlap measure for NMS')
 
-        idx = np.delete(idx,
-                        np.concatenate(([last], np.where(o > overlap)[0])))
+        idx = np.delete(idx, np.where(o > overlap)[0])
 
-    return dets[pick, :].astype("int"), score[pick]
+    return dets[idx_correct[pick], :].astype("int"), score[idx_correct[pick]]
