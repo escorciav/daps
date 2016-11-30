@@ -1,0 +1,24 @@
+name: daps-eccv16
+dependencies:
+- h5py=2.6.0=np111py27_2
+- hdf5=1.8.17=1
+- libgfortran=3.0.0=1
+- mkl=11.3.3=0
+- nose=1.3.7=py27_1
+- numpy=1.11.2=py27_0
+- openssl=1.0.2j=0
+- pandas=0.19.1=np111py27_0
+- pip=9.0.1=py27_0
+- python=2.7.12=1
+- python-dateutil=2.6.0=py27_0
+- pytz=2016.7=py27_0
+- readline=6.2=2
+- scipy=0.18.1=np111py27_0
+- setuptools=27.2.0=py27_0
+- six=1.10.0=py27_0
+- sqlite=3.13.0=0
+- tk=8.5.18=0
+- wheel=0.29.0=py27_0
+- zlib=1.2.8=3
+prefix: /home/escorciav/install/bin/miniconda3/envs/daps-eccv16
+

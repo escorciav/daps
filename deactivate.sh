@@ -10,6 +10,6 @@
 # Deactivate current conda environment
 source deactivate
 # Clean your PYTHONPATH (Warning: it's a complete reset)
-export PYTHONPATH
+export PYTHONPATH=
 # Clean everything loaded by modules-environment
 module purge
