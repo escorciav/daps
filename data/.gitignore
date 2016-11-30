@@ -1,0 +1,5 @@
+# Datasets
+thumos14
+
+# Model files
+*.[npz, npy, hdf5, h5]
