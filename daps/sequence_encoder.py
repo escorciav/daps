@@ -11,8 +11,8 @@ from daps.utils.segment import format as segment_format
 class DAPs(object):
     """Deep Action Proposal (seq. enconder & proposal generation)
     """
-    def __init__(self, num_outputs=64, seq_length=32, depth=1,
-                 width=256, input_size=500, receptive_field=512):
+    def __init__(self, num_outputs=64, seq_length=32, depth=1, width=256,
+                 input_size=500, receptive_field=512, anchors=None):
         """Initialize DAPs architecture
 
         Parameters
@@ -29,6 +29,15 @@ class DAPs(object):
             Dimension of feature vector
         receptive_field : int, optional
             Receptive field in terms of number of frames
+        anchors : ndarray, optional
+            2d-ndarray of size [num_outputs, 2] with anchor segment locations
+            normalized with respect to receptive field. The anchor format
+            should be [central-frame, duration].
+
+        Raises
+        ------
+        ValueError
+            number of anchors is different than number of outputs
 
         """
         self.num_outputs = num_outputs
@@ -38,7 +47,14 @@ class DAPs(object):
         self.input_size = input_size
         self.model = None
         self.receptive_field = receptive_field
+        self.anchors = None
         self._build()
+
+        if anchors is not None:
+            if anchors.shape[0] != num_outputs:
+                raise ValueError(('Mismatch between number of anchors and'
+                                  'outputs'))
+            self.anchors = anchors
 
     def _build(self, forget_bias=5.0, grad_clip=10.0):
         """Build architecture
@@ -137,7 +153,7 @@ class DAPs(object):
             param_values = [f['arr_%d' % i] for i in range(len(f.files))]
         set_all_param_values(self.network, param_values)
 
-    def retrieve_proposals(self, c3d_stack, f_init_array):
+    def retrieve_proposals(self, c3d_stack, f_init_array, override=False):
         """Retrieve proposals for multiple streams.
 
         Parameters
@@ -149,6 +165,9 @@ class DAPs(object):
             push as many videos as your HW allows it.
         f_init_array : ndarray.
             1d-ndarray with initial frame of each stream.
+        override : bool, optional.
+            If True, override predicted locations with anchors. Make sure of
+            initialize your instance properly in order to use the anchors.
 
         Returns
         -------
@@ -172,6 +191,9 @@ class DAPs(object):
         n_streams = c3d_stack.shape[0]
 
         loc, score = self.forward_pass(floatX(c3d_stack))
+
+        if override and self.anchors is not None:
+            loc[:, ...] = self.anchors.reshape(-1)
 
         # Clip proposals inside receptive field
         loc.clip(0, 1, out=loc)
