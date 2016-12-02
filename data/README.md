@@ -9,3 +9,7 @@ The following items are expected to be inside this folder
 ### models
 
 This folder contains models created by us.
+
+### samples
+
+It describes the HDF5-file used for our [generate_proposals.py]() program as well as our visual encoder [C3D interface]().https://github.com/escorciav/daps/blob/master/tools/generate_proposals.py
