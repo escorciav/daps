@@ -4,7 +4,7 @@ Temporal Action Proposals for long untrimmed videos.
 
 DAPs architecture allows to retrieve segments from long videos where it is likely to find actions with high recall very quickly.
 
-![pull arch figure](image-modal)
+![pull arch figure][image-modal]
 
 ## Welcome
 
@@ -28,7 +28,7 @@ url="http://dx.doi.org/10.1007/978-3-319-46487-9_47"
 }
 ```
 
-If you like this project, give us a :start: in the github banner :wink:.
+If you like this project, give us a :star: in the github banner :wink:.
 
 ## Installation
 
@@ -70,7 +70,7 @@ If you like this project, give us a :start: in the github banner :wink:.
 
   - Ensure that our package is in your `PYTHONPATH`, python users.
 
-> Note for **new** environment-modules users: You must personalize the script to [activate](https://github.com/escorciav/daps/blob/master/activate.sh) the environment, otherwise it will fail.
+  > Note for **new** environment-modules users: You must personalize the script to [activate](https://github.com/escorciav/daps/blob/master/activate.sh) the environment, otherwise it will fail.
 
 4. Execute: `tools/generate_proposals.py -iv video_test_0000541 -ic3d [path-to-c3d-of-videos] -imd [path-our-model]`
 
