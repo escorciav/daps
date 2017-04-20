@@ -36,7 +36,7 @@ If you like this project, give us a :star: in the github banner :wink:.
 
 2. Clone our repo, `git clone https://github.com/escorciav/daps/`.
 
-3. Go to our project folder and type `sh install.sh`.
+3. Go to our project folder and type `bash install.sh`.
 
 *Notes*
 
