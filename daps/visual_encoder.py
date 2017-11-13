@@ -174,7 +174,7 @@ class C3D(object):
 
         Notes
         -----
-        1. There is no guarantee that output is a contiguous arrya.
+        1. There is no guarantee that output is a contiguous array.
 
         """
         if x.ndim != 2:
